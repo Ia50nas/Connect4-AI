@@ -80,7 +80,5 @@ class Player2:
         :param state: Current game state
         :return: Best move (column index)
         """
-        computational_budget = 1000  # Number of iterations for MCTS
+        computational_budget = 100  # Number of iterations for MCTS
         return MCTS_UCT(state, itermax=computational_budget)  # Best move chosen by MCTS
-
-# Player2 class now integrated with MCTS logic. Let me know if you'd like further refinements!
