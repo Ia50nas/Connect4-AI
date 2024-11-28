@@ -1,4 +1,3 @@
-import random
 
 def Minimax(state, depth, alpha, beta, maximizingPlayer):
     # If maximum depth is reached or the game is over, evaluate the current state
@@ -32,8 +31,8 @@ def Minimax(state, depth, alpha, beta, maximizingPlayer):
 
 def EvaluateState(state):
     """
-    Evaluates the game state for Player 1 (maximizing player).
-    Higher scores favor Player 1; lower scores favor Player 2.
+    Higher scores favor Player 1; 
+    lower scores favor Player 2.
     """
     score = 0
     center_column = state.width // 2
@@ -41,7 +40,7 @@ def EvaluateState(state):
     # Central column bias: Encourage moves closer to the center
     for row in range(state.height):
         if state.board[center_column][row] == 1:  # Player 1's piece
-            score += 3
+            score += 3  
         elif state.board[center_column][row] == 2:  # Player 2's piece
             score -= 3
 
