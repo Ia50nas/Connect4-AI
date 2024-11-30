@@ -1,7 +1,6 @@
 import math
 import random
 
-# Extracted and refactored Player 2 class with MCTS logic integrated
 class Node:
     """
     Node of a game tree. A tree is a connected acyclic graph.
@@ -34,51 +33,56 @@ def UCB1(node, child, exploration_constant=math.sqrt(2)):
     return child.wins / child.visits + exploration_constant * math.sqrt(math.log(node.visits) / child.visits)
 
 
-def selection_phase(node, state):
-    while node.IsFullyExpanded() and node.childNodes:
-        node = sorted(node.childNodes, key=lambda child: UCB1(node, child))[-1]
-        state.DoMove(node.move)
-    return node
-
-
-def expansion_phase(node, state):
-    if node.untriedMoves:
-        move = random.choice(node.untriedMoves)
-        state.DoMove(move)
-        node = node.AddChild(move, state)
-    return node
-
-
-def rollout_phase(state):
-    while state.GetMoves():
-        state.DoMove(random.choice(state.GetMoves()))
-
-
-def backpropagation_phase(node, state):
-    while node:
-        node.Update(state.GetResult(node.playerJustMoved))
-        node = node.parentNode
-
-
-def MCTS_UCT(rootstate, itermax):
-    rootnode = Node(state=rootstate)
-    for _ in range(itermax):
-        node = rootnode
-        state = rootstate.Clone()
-        node = selection_phase(node, state)
-        node = expansion_phase(node, state)
-        rollout_phase(state)
-        backpropagation_phase(node, state)
-    return sorted(rootnode.childNodes, key=lambda c: c.visits)[-1].move
-
-
-# Refactored Player 2 class
 class Player2:
+    def __init__(self, computational_budget):
+        """
+        Initialize Player 2 with a computational budget.
+        :param computational_budget: Maximum number of iterations for MCTS.
+        """
+        self.computational_budget = computational_budget
+
+    def MCTS_UCT(self, rootstate):
+        """
+        Perform MCTS with a given computational budget.
+        :param rootstate: The root game state.
+        :return: The best move determined by MCTS.
+        """
+        rootnode = Node(state=rootstate)
+        for _ in range(self.computational_budget):
+            node = rootnode
+            state = rootstate.Clone()
+            node = self.selection_phase(node, state)
+            node = self.expansion_phase(node, state)
+            self.rollout_phase(state)
+            self.backpropagation_phase(node, state)
+        return sorted(rootnode.childNodes, key=lambda c: c.visits)[-1].move
+
+    def selection_phase(self, node, state):
+        while node.IsFullyExpanded() and node.childNodes:
+            node = sorted(node.childNodes, key=lambda child: UCB1(node, child))[-1]
+            state.DoMove(node.move)
+        return node
+
+    def expansion_phase(self, node, state):
+        if node.untriedMoves:
+            move = random.choice(node.untriedMoves)
+            state.DoMove(move)
+            node = node.AddChild(move, state)
+        return node
+
+    def rollout_phase(self, state):
+        while state.GetMoves():
+            state.DoMove(random.choice(state.GetMoves()))
+
+    def backpropagation_phase(self, node, state):
+        while node:
+            node.Update(state.GetResult(node.playerJustMoved))
+            node = node.parentNode
+
     def choose_move(self, state):
         """
-        Uses MCTS to choose the best move for Player 2.
-        :param state: Current game state
-        :return: Best move (column index)
+        Use MCTS to choose the best move for Player 2.
+        :param state: Current game state.
+        :return: Best move (column index).
         """
-        computational_budget = 100  # Number of iterations for MCTS
-        return MCTS_UCT(state, itermax=computational_budget)  # Best move chosen by MCTS
+        return self.MCTS_UCT(state)

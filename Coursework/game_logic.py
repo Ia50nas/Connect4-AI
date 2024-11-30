@@ -105,8 +105,9 @@ def PrintGameResults(state):
 
 def PlayGame(initialState):
     state = initialState
-    player1 = Player1()
-    player2 = Player2()
+    computational_budget = 10000  # Set a shared budget for both players
+    player1 = Player1(computational_budget=computational_budget)
+    player2 = Player2(computational_budget=computational_budget)
     while not state.IsGameOver():
         print(str(state))
         if state.playerJustMoved == 1:
@@ -115,6 +116,7 @@ def PlayGame(initialState):
             move = player1.choose_move(state)
         state.DoMove(move)
     PrintGameResults(state)
+
 
 
 if __name__ == "__main__":
