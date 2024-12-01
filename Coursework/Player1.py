@@ -19,7 +19,7 @@ class Player1:
         """
         if depth == 0 or state.IsGameOver() or self.evaluations >= self.computational_budget:
             self.evaluations += 1  # Increment evaluation counter
-            return EvaluateState(state)
+            return self.EvaluateState(state)
 
         if maximizingPlayer:
             bestScore = -float('inf')
@@ -65,7 +65,13 @@ class Player1:
         filled_cells = sum(sum(1 for cell in col if cell != 0) for col in state.board)
         total_cells = state.width * state.height
         game_phase = filled_cells / total_cells
-        depth = 4 if game_phase < 0.5 else 6  # Increase depth in mid/late game
+
+        if game_phase < 0.3:  # Early game
+            depth = 5
+        elif game_phase < 0.7:  # Mid game
+            depth = 6
+        else:  # Late game
+            depth = 7
 
         for move in sorted(state.GetMoves(), key=lambda x: abs(x - state.width // 2)):
             if self.evaluations >= self.computational_budget:
@@ -80,80 +86,72 @@ class Player1:
 
         return bestMove
 
+    def EvaluateState(self, state):
+        """
+        Evaluate the current state of the board.
+        A positive score favors Player 1, and a negative score favors Player 2.
+        """
+        score = 0
+        center_column = state.width // 2
 
-def EvaluateState(state):
-    """
-    Evaluate the current state of the board.
-    A positive score favors Player 1, and a negative score favors Player 2.
-    """
-    score = 0
-    center_column = state.width // 2
+        # Stronger emphasis on center control
+        center_weight = 3
+        for row in range(state.height):
+            if state.board[center_column][row] == 1:
+                score += center_weight
+            elif state.board[center_column][row] == 2:
+                score -= center_weight
 
-    # Game phase: Early, mid, or late based on board fill percentage
-    filled_cells = sum(sum(1 for cell in col if cell != 0) for col in state.board)
-    total_cells = state.width * state.height
-    game_phase = filled_cells / total_cells  # 0 (early) to 1 (late)
+        for x in range(state.width):
+            for y in range(state.height):
+                if state.board[x][y] == 1:  # Player 1's piece
+                    score += self.EvaluatePosition(state, x, y, 1)
+                elif state.board[x][y] == 2:  # Player 2's piece
+                    score -= self.EvaluatePosition(state, x, y, 2)
 
-    # Center column heuristic: Encourage center play in early game
-    center_weight = 4 if game_phase < 0.5 else 2
-    for row in range(state.height):
-        if state.board[center_column][row] == 1:
-            score += center_weight
-        elif state.board[center_column][row] == 2:
-            score -= center_weight
+        return score
 
-    # Evaluate all positions on the board
-    for x in range(state.width):
-        for y in range(state.height):
-            if state.board[x][y] == 1:  # Player 1's piece
-                score += EvaluatePosition(state, x, y, 1, game_phase)
-            elif state.board[x][y] == 2:  # Player 2's piece
-                score -= EvaluatePosition(state, x, y, 2, game_phase)
+    def EvaluatePosition(self, state, x, y, player):
+        """
+        Evaluate the potential of a single position for the given player.
+        """
+        directions = [(0, 1), (1, 0), (1, 1), (1, -1)]  # Vertical, horizontal, diagonal
+        position_score = 0
 
-    return score
+        for dx, dy in directions:
+            count = 1
+            blocked_front, blocked_back = False, False
 
+            # Check forward direction
+            step = 1
+            while state.IsOnBoard(x + step * dx, y + step * dy):
+                if state.board[x + step * dx][y + step * dy] == player:
+                    count += 1
+                elif state.board[x + step * dx][y + step * dy] != 0:
+                    blocked_front = True
+                    break
+                else:
+                    break
+                step += 1
 
-def EvaluatePosition(state, x, y, player, game_phase):
-    """
-    Evaluate the potential of a single position for the given player.
-    """
-    directions = [(0, 1), (1, 0), (1, 1), (1, -1)]  # Vertical, horizontal, diagonal
-    position_score = 0
+            # Check backward direction
+            step = 1
+            while state.IsOnBoard(x - step * dx, y - step * dy):
+                if state.board[x - step * dx][y - step * dy] == player:
+                    count += 1
+                elif state.board[x - step * dx][y - step * dy] != 0:
+                    blocked_back = True
+                    break
+                else:
+                    break
+                step += 1
 
-    for dx, dy in directions:
-        count = 1
-        blocked_front, blocked_back = False, False
+            # Scoring based on potential lines
+            if count >= state.connect:
+                position_score += 10000  # Winning line
+            elif count == state.connect - 1 and not (blocked_front and blocked_back):
+                position_score += 100  # Near-win
+            elif count == state.connect - 2 and not (blocked_front and blocked_back):
+                position_score += 10  # Building potential
 
-        # Check forward direction
-        step = 1
-        while state.IsOnBoard(x + step * dx, y + step * dy):
-            if state.board[x + step * dx][y + step * dy] == player:
-                count += 1
-            elif state.board[x + step * dx][y + step * dy] != 0:
-                blocked_front = True
-                break
-            else:
-                break
-            step += 1
-
-        # Check backward direction
-        step = 1
-        while state.IsOnBoard(x - step * dx, y - step * dy):
-            if state.board[x - step * dx][y - step * dy] == player:
-                count += 1
-            elif state.board[x - step * dx][y - step * dy] != 0:
-                blocked_back = True
-                break
-            else:
-                break
-            step += 1
-
-        # Scoring for potential lines
-        if count >= state.connect:  # Winning line
-            position_score += 10000
-        elif count == state.connect - 1 and not (blocked_front and blocked_back):  # Near-win
-            position_score += 500 * (1 if game_phase > 0.5 else 2)
-        elif count == state.connect - 2 and not (blocked_front and blocked_back):  # Building potential
-            position_score += 50 * (1 if game_phase > 0.5 else 1.5)
-
-    return position_score
+        return position_score
