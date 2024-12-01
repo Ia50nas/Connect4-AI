@@ -67,12 +67,20 @@ class Player1:
         game_phase = filled_cells / total_cells
 
         if game_phase < 0.3:  # Early game
-            depth = 5
-        elif game_phase < 0.7:  # Mid game
             depth = 6
-        else:  # Late game
+        elif game_phase < 0.7:  # Mid game
             depth = 7
+        else:  # Late game
+            depth = 8
 
+        # Defensive move priority
+        for move in state.GetMoves():
+            new_state = state.Clone()
+            new_state.DoMove(move)
+            if new_state.DoesMoveWin(move, 0):  # Prevent Player 2's win
+                return move  # Immediately block the threat
+
+        # Evaluate moves
         for move in sorted(state.GetMoves(), key=lambda x: abs(x - state.width // 2)):
             if self.evaluations >= self.computational_budget:
                 break  # Stop if the budget is exceeded
