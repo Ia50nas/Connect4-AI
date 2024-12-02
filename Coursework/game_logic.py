@@ -105,7 +105,7 @@ def PrintGameResults(state):
 
 def PlayGame(initialState):
     state = initialState
-    computational_budget = 100  # Set a shared budget for both players
+    computational_budget = 10000  # Set a shared budget for both players
     player1 = Player1(computational_budget=computational_budget)
     player2 = Player2(computational_budget=computational_budget)
     while not state.IsGameOver():
