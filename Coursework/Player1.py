@@ -9,7 +9,7 @@ class Player1:
 
     def Minimax(self, state, depth, alpha, beta, maximizingPlayer):
         """
-        Perform the Minimax search with alpha-beta pruning and budget tracking.
+        Perform the Minimax search with alpha-beta pruning and move sorting.
         :param state: The current game state.
         :param depth: The depth of the search.
         :param alpha: Alpha value for pruning.
@@ -18,14 +18,18 @@ class Player1:
         :return: The evaluated score of the current state.
         """
         if depth == 0 or state.IsGameOver() or self.evaluations >= self.computational_budget:
-            self.evaluations += 1  # Increment evaluation counter
+            self.evaluations += 1
             return self.EvaluateState(state)
+
+        moves = state.GetMoves()
+        # Sort moves to prioritize central positions
+        moves = sorted(moves, key=lambda move: -abs(move - state.width // 2))
 
         if maximizingPlayer:
             bestScore = -float('inf')
-            for move in sorted(state.GetMoves(), key=lambda x: abs(x - state.width // 2)):
+            for move in moves:
                 if self.evaluations >= self.computational_budget:
-                    break  # Stop if the budget is exceeded
+                    break
                 newState = state.Clone()
                 newState.DoMove(move)
                 score = self.Minimax(newState, depth - 1, alpha, beta, False)
@@ -36,9 +40,9 @@ class Player1:
             return bestScore
         else:
             bestScore = float('inf')
-            for move in sorted(state.GetMoves(), key=lambda x: abs(x - state.width // 2)):
+            for move in moves:
                 if self.evaluations >= self.computational_budget:
-                    break  # Stop if the budget is exceeded
+                    break
                 newState = state.Clone()
                 newState.DoMove(move)
                 score = self.Minimax(newState, depth - 1, alpha, beta, True)
@@ -61,17 +65,8 @@ class Player1:
 
         self.evaluations = 0  # Reset evaluation counter
 
-        # Determine dynamic depth based on game phase
-        filled_cells = sum(sum(1 for cell in col if cell != 0) for col in state.board)
-        total_cells = state.width * state.height
-        game_phase = filled_cells / total_cells
-
-        if game_phase < 0.3:  # Early game
-            depth = 6
-        elif game_phase < 0.7:  # Mid game
-            depth = 7
-        else:  # Late game
-            depth = 8
+        # Determine dynamic depth based on computational budget
+        depth = self.calculate_depth(self.computational_budget)
 
         # Defensive move priority
         for move in state.GetMoves():
@@ -83,7 +78,7 @@ class Player1:
         # Evaluate moves
         for move in sorted(state.GetMoves(), key=lambda x: abs(x - state.width // 2)):
             if self.evaluations >= self.computational_budget:
-                break  # Stop if the budget is exceeded
+                break
             newState = state.Clone()
             newState.DoMove(move)
             score = self.Minimax(newState, depth=depth, alpha=alpha, beta=beta, maximizingPlayer=False)
@@ -94,22 +89,36 @@ class Player1:
 
         return bestMove
 
+    def calculate_depth(self, budget, branching_factor=7):
+        """
+        Calculate the maximum depth based on the computational budget.
+        """
+        depth = 0
+        total_evaluations = 0
+        while total_evaluations < budget:
+            total_evaluations = (branching_factor**(depth + 1) - 1) // (branching_factor - 1)
+            if total_evaluations > budget:
+                break
+            depth += 1
+        return depth - 1
+
     def EvaluateState(self, state):
         """
-        Evaluate the current state of the board.
-        A positive score favors Player 1, and a negative score favors Player 2.
+        Enhanced evaluation function for Player1.
+        Evaluates the board state based on opportunities, threats, and forks.
         """
         score = 0
         center_column = state.width // 2
 
-        # Stronger emphasis on center control
-        center_weight = 3
+        # Center control weighting
+        center_weight = 4
         for row in range(state.height):
             if state.board[center_column][row] == 1:
                 score += center_weight
             elif state.board[center_column][row] == 2:
                 score -= center_weight
 
+        # Evaluate each cell for both players
         for x in range(state.width):
             for y in range(state.height):
                 if state.board[x][y] == 1:  # Player 1's piece
@@ -122,9 +131,11 @@ class Player1:
     def EvaluatePosition(self, state, x, y, player):
         """
         Evaluate the potential of a single position for the given player.
+        Considers threats, opportunities, and forks.
         """
         directions = [(0, 1), (1, 0), (1, 1), (1, -1)]  # Vertical, horizontal, diagonal
         position_score = 0
+        opponent = 3 - player
 
         for dx, dy in directions:
             count = 1
@@ -135,7 +146,7 @@ class Player1:
             while state.IsOnBoard(x + step * dx, y + step * dy):
                 if state.board[x + step * dx][y + step * dy] == player:
                     count += 1
-                elif state.board[x + step * dx][y + step * dy] != 0:
+                elif state.board[x + step * dx][y + step * dy] == opponent:
                     blocked_front = True
                     break
                 else:
@@ -147,19 +158,23 @@ class Player1:
             while state.IsOnBoard(x - step * dx, y - step * dy):
                 if state.board[x - step * dx][y - step * dy] == player:
                     count += 1
-                elif state.board[x - step * dx][y - step * dy] != 0:
+                elif state.board[x - step * dx][y - step * dy] == opponent:
                     blocked_back = True
                     break
                 else:
                     break
                 step += 1
 
-            # Scoring based on potential lines
+            # Scoring based on count and blocked status
             if count >= state.connect:
                 position_score += 10000  # Winning line
             elif count == state.connect - 1 and not (blocked_front and blocked_back):
-                position_score += 100  # Near-win
+                position_score += 500  # Offensive near-win
             elif count == state.connect - 2 and not (blocked_front and blocked_back):
-                position_score += 10  # Building potential
+                position_score += 50  # Building potential
+
+            # Reduced penalty for unblocked threats to balance defense/offense
+            if count == state.connect - 1 and (blocked_front or blocked_back):
+                position_score -= 300  # Less harsh penalty for threats
 
         return position_score
