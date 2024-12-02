@@ -40,7 +40,7 @@ def simulate_games_parallel(num_games, budgets):
 
 if __name__ == "__main__":
     budgets = [100, 500, 1000, 10000]#100, 500, 1000, 10000
-    num_games = 100  # Increase this number as needed
+    num_games = 1000  # Increase this number as needed
     results = simulate_games_parallel(num_games, budgets)
     for budget, result in results.items():
         print(f"\nResults for budget {budget}:")
