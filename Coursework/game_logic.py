@@ -2,6 +2,7 @@ import colorama
 from colorama import Fore, Back
 from Player1 import Player1
 from Player2 import Player2
+# The implementaion of game logic designed and written by James Stovold and further adjusted to fit the coursework
 
 class GameState:
     def __init__(self):

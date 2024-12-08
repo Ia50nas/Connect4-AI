@@ -1,6 +1,8 @@
 import random
 from math import sqrt, log
 
+# The implementaion of MCTS for player 2 was designed and written by James Stovold and further adjusted to fit the coursework
+
 class Node:
     """ Node of a game tree. A tree is a connected acyclic graph.
         Note: self.wins is from the perspective of playerJustMoved.
