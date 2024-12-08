@@ -4,6 +4,11 @@ from Player1 import Player1
 from Player2 import Player2
 from game_logic import Connect4State
 
+''' 
+Run this file in order to run multiple games at once 
+In main add into budgets the number of computational budgets you want to test and
+num_games the number of games it should play per computational budget
+'''
 def simulate_single_game(args):
     from game_logic import Connect4State
     from Player1 import Player1

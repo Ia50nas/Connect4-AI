@@ -9,13 +9,7 @@ class Player1:
 
     def Minimax(self, state, depth, alpha, beta, maximizingPlayer):
         """
-        Perform the Minimax search with alpha-beta pruning and move sorting.
-        :param state: The current game state.
-        :param depth: The depth of the search.
-        :param alpha: Alpha value for pruning.
-        :param beta: Beta value for pruning.
-        :param maximizingPlayer: True if it's the maximizing player's turn.
-        :return: The evaluated score of the current state.
+
         """
         if depth == 0 or state.IsGameOver() or self.evaluations >= self.computational_budget:
             self.evaluations += 1
@@ -53,11 +47,6 @@ class Player1:
             return bestScore
 
     def choose_move(self, state):
-        """
-        Choose the best move using Minimax search, respecting the computational budget.
-        :param state: The current game state.
-        :return: The column index of the best move.
-        """
         bestMove = None
         bestScore = -float('inf')
         alpha = -float('inf')
@@ -92,6 +81,8 @@ class Player1:
     def calculate_depth(self, budget, branching_factor=7):
         """
         Calculate the maximum depth based on the computational budget.
+        Takes into consideration the computational budget and counts the depth based on branching factor
+        these will give us the best possible depth for each budget as it will 
         """
         depth = 0
         total_evaluations = 0
