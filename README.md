@@ -84,14 +84,16 @@ Player 2 wins!
 
 ### Simulation Results
 ```
-Results for budget 1000:
-Player1 Wins: 45
-Player2 Wins: 50
+Results for budget 100:
+Player1 Wins: 53
+Player2 Wins: 42
 Draws: 5
-Winning Percentage: {'Player1': 45.0, 'Player2': 50.0, 'Draws': 5.0}
-Average Moves: {'Player1': 35, 'Player2': 36, 'Draws': 34}
+Winning Percentage: {'Player1': 53.0, 'Player2': 42.0, 'Draws': 5.0}
+Average Moves: {'Player1': 14, 'Player2': 25}
 Average Time Per Move: {'Player1': 0.002, 'Player2': 0.005}
-Longest Win Streak: {'Player1': 8, 'Player2': 10}
+Longest Win Streak: {'Player1': 12, 'Player2': 8}
+
+**These are not the actual results for the results please refer to running the program**
 ```
 
 
