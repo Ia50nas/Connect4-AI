@@ -74,7 +74,7 @@ The script outputs:
 ```
 . . . . . . .
 . . . . . . .
-. . . . . . .
+. . . . X . .
 . . . X O . .
 . . X O X . .
 O X O X O X O
